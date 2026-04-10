@@ -26,6 +26,7 @@ public class UserService {
         user.setUsername(request.getUsername());
         user.setName(request.getName());
         user.setAge(request.getAge());
+        user.setRole(request.getRole());
 
         // 🛡️ Mã hóa mật khẩu trước khi lưu vào DB
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();

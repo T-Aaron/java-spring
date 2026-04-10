@@ -37,7 +37,6 @@ public class AuthenticationController {
 //    public boolean introspect (@RequestBody IntrospectRequest request) throws JOSEException, ParseException {
 //        return authenticationService.introspect(request.getToken());
 //    }
-
     public ApiResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request)
         throws JOSEException, ParseException{
 

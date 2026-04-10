@@ -1,5 +1,6 @@
 package com.HelloWorld.hello.exception.error;
 
+import com.HelloWorld.hello.dto.response.ApiResponse;
 import com.HelloWorld.hello.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,5 +38,15 @@ public class GlobalExceptionHandler {
         ApiError error = new ApiError("FORBIDEN", "Bạn không có quyền thực hiện hành động này!");
         return buildErrorResponse(HttpStatus.FORBIDDEN, List.of(error));
     }
+
+    @ExceptionHandler(value = RuntimeException.class)
+    ResponseEntity<ApiResponse> handlingRuntimeExeption(RuntimeException exception){
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setCode(9999); // Mã lỗi hệ thống chung
+        apiResponse.setMessage(exception.getMessage());
+
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
+
 }
 

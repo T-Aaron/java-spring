@@ -36,26 +36,36 @@ public class UserController {
     //Get user by id
     @GetMapping("/{id}")
     //@PathVariable: Nếu không có nó, Spring sẽ không biết lấy giá trị từ URL để đổ vào biến
-    public ResponseEntity<UserResponse> getById (@PathVariable Long id){
-        return ResponseEntity.ok(userService.getById(id));
+//    public ResponseEntity<UserResponse> getById (@PathVariable Long id){
+//        return ResponseEntity.ok(userService.getById(id));
+//    }
+    public ApiResponse<UserResponse> getById (@PathVariable Long id){
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getById(id)).build();
     }
-
 
     //Create
     @PostMapping
-    public ResponseEntity<UserResponse> create(@Valid @RequestBody UserRequest request){
-        return ResponseEntity.ok(userService.create(request));
+//    public ResponseEntity<UserResponse> create(@Valid @RequestBody UserRequest request){
+//        return ResponseEntity.ok(userService.create(request));
+//    }
+    public ApiResponse<UserResponse> create(@Valid @RequestBody UserRequest request){
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.create(request))
+                .build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> update(@PathVariable Long id, @Valid @RequestBody UserRequest request){
+    public ApiResponse<UserResponse> update(@PathVariable Long id, @Valid @RequestBody UserRequest request){
         UserResponse updated = userService.update(id, request);
-        return ResponseEntity.ok(updated);
+        return ApiResponse.<UserResponse>builder()
+                .result(updated)
+                .build();
     }
 
     //Delete
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete (@PathVariable Long id){
+    public ApiResponse<String> delete (@PathVariable Long id){
 //        boolean deleted = userService.deleteUserById(id);
 //        if (!deleted){
 //            return ResponseEntity.status(404).body("User not found");
@@ -63,14 +73,20 @@ public class UserController {
 //      3️⃣ Controller KHÔNG xử lý lỗi nữa
 //      👉 Controller sạch.
         userService.deleteUserById(id);
-        return ResponseEntity.ok("User deleted Successfully");
+        return ApiResponse.<String>builder()
+                .result("User has been deleted")
+                .build();
     }
 
     //Search
     @GetMapping("/search")
-    public ResponseEntity<List<UserResponse>> search(@RequestParam String keyword){
+    public ApiResponse<List<UserResponse>> search(@RequestParam String keyword){
         List<UserResponse> user = userService.searchByName(keyword);
-        return ResponseEntity.ok(user);
+//        return ResponseEntity.ok(user);
+        return ApiResponse.<List<UserResponse>>builder()
+                .result(user)
+                .build();
     }
+
 
 }
