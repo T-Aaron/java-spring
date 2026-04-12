@@ -13,11 +13,11 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserRequest {
 
-    @Size(min = 3, message = "USERNAME_INVALID, at least 3 char") // it nhất 3 ký tự
+    @Size(min = 3, message = "USERNAME_INVALID") // it nhất 3 ký tự
     @NotBlank(message = "REQUIRED")
     String username;
 
-    @Size(min = 6, message = "USERNAME_INVALID, at least 6 char") // it nhất 3 ký tự
+    @Size(min = 6, message = "INVALID_PASSWORD") // it nhất 3 ký tự
     @NotBlank(message = "REQUIRED")
     String password;
 

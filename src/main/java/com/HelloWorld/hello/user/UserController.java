@@ -4,7 +4,7 @@ import com.HelloWorld.hello.dto.response.ApiResponse;
 import com.HelloWorld.hello.user.dto.UserRequest;
 import com.HelloWorld.hello.user.dto.UserResponse;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -87,6 +87,4 @@ public class UserController {
                 .result(user)
                 .build();
     }
-
-
 }
