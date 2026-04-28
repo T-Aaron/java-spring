@@ -6,10 +6,12 @@ import lombok.Getter;
 public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(9999, "uncategorize error"),
     USER_EXISTED(1001, "User existed"),
-    USERNAME_INVALID(1002, "User name invalid, at least 3 characters"),
-    INVALID_PASSWORD(1003, "Password invalid, must at least 6 characters"),
     USER_NOT_FOUND(1004, "User not found"),
-    UNAUTHORIZED(1005, "You do not have permission")
+    UNAUTHORIZED(1005, "You do not have permission"),
+
+    USERNAME_INVALID(1002, "User name invalid, at least {min} characters"),
+    INVALID_PASSWORD(1003, "Password invalid, must at least {min} characters"),
+    AGE_INVALID(1005, "You must be at least {min} years old"),
     ;
 
     ErrorCode(int code, String message){

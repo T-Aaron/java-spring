@@ -3,6 +3,7 @@ package com.HelloWorld.hello.exception.error;
 import com.HelloWorld.hello.dto.response.ApiResponse;
 import com.HelloWorld.hello.exception.ErrorCode;
 import com.HelloWorld.hello.exception.UserNotFoundException;
+import jakarta.validation.ConstraintViolation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -10,7 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @RestControllerAdvice
@@ -31,22 +32,43 @@ public class GlobalExceptionHandler {
     // 1. Bắt lỗi Validation (Dữ liệu đầu vào)
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     ResponseEntity<ApiResponse> handlingValidation(MethodArgumentNotValidException exception){
-        String enumKey = exception.getFieldError().getDefaultMessage();
+        var fieldError = exception.getFieldError();
+        String enumKey = fieldError.getDefaultMessage();
 //        ErrorCode errorCode = ErrorCode.valueOf(enumKey);
 
         // Mẹo: Đề phòng trường hợp message trong Request không khớp với tên Enum
-        ErrorCode errorCode = ErrorCode.USERNAME_INVALID;
+        ErrorCode errorCode = ErrorCode.UNCATEGORIZED_EXCEPTION;
+        Map<String, Object> attributes = null;
+
         try {
             errorCode = ErrorCode.valueOf(enumKey);
+            // Trích xuất các thuộc tính từ Annotation (ví dụ: min, max...)
+            var constraintViolation = fieldError.unwrap(ConstraintViolation.class);
+            attributes = constraintViolation.getConstraintDescriptor().getAttributes();
         } catch (IllegalArgumentException e) {
             // Log lỗi nếu cần
         }
 
-        ApiResponse apiResponse = new ApiResponse();
+        ApiResponse<Object> apiResponse = new ApiResponse<>();
         apiResponse.setCode(errorCode.getCode());
-        apiResponse.setMessage(errorCode.getMessage());
+
+        apiResponse.setMessage(
+                Objects.nonNull(attributes)
+                        ? mapAttribute(errorCode.getMessage(), attributes)
+                        : errorCode.getMessage());
 
         return ResponseEntity.badRequest().body(apiResponse);
+    }
+    // Hàm Helper để thay thế placeholder {min} bằng giá trị thực tế
+    private String mapAttribute(String message, Map<String, Object> attributes){
+        // Thử lấy 'value' (cho @Min) hoặc 'min' (cho @Size)
+        Object minValue = attributes.get("value");// Lấy giá trị 'min' từ Annotation
+
+        if (Objects.isNull(minValue)) {
+            minValue = attributes.get("min");
+        }
+
+        return message.replace("{min}", String.valueOf(minValue));
     }
 
     // 2. Bắt lỗi không tìm thấy User (Thay thế UserNotFoundException cũ)

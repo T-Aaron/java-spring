@@ -24,7 +24,7 @@ public class UserRequest {
     @NotBlank(message = "REQUIRED")
     String name;
 
-    @Min(value = 0, message = "AGE_INVALID")
+    @Min(value = 18, message = "AGE_INVALID")
     Integer age;
 
     String role;
