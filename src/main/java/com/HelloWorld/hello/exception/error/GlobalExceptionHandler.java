@@ -82,17 +82,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
     }
 
-    // 3. Bắt lỗi phân quyền
-    @ExceptionHandler(value = org.springframework.security.access.AccessDeniedException.class)
-    ResponseEntity<ApiResponse> handlingAccessDenied(AccessDeniedException exception){
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setCode(ErrorCode.UNAUTHORIZED.getCode());
-        apiResponse.setMessage(ErrorCode.UNAUTHORIZED.getMessage());
 
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiResponse);
-    }
-
-    // 4. Bắt tất cả các lỗi Runtime còn lại
+    // 3. Bắt tất cả các lỗi Runtime còn lại
     @ExceptionHandler(value = RuntimeException.class)
     ResponseEntity<ApiResponse<Objects>> handlingRuntimeExeption(RuntimeException exception){
         ApiResponse<Objects> apiResponse = new ApiResponse<>();
@@ -100,6 +91,27 @@ public class GlobalExceptionHandler {
         apiResponse.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
 
         return ResponseEntity.badRequest().body(apiResponse);
+    }
+
+    // 4. Bắt lỗi phân quyền
+//    @ExceptionHandler(value = org.springframework.security.access.AccessDeniedException.class)
+//    ResponseEntity<ApiResponse> handlingAccessDenied(AccessDeniedException exception){
+//        ApiResponse apiResponse = new ApiResponse();
+//        apiResponse.setCode(ErrorCode.UNAUTHORIZED.getCode());
+//        apiResponse.setMessage(ErrorCode.UNAUTHORIZED.getMessage());
+//
+//        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiResponse);
+//    }
+    @ExceptionHandler(value = AccessDeniedException.class)
+    ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException exception){
+        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                ApiResponse.builder()
+                        .code(errorCode.getCode())
+                        .message(errorCode.getMessage())
+                        .build()
+        );
     }
 }
 

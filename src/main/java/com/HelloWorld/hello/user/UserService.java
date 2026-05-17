@@ -5,7 +5,12 @@ import com.HelloWorld.hello.entity.User;
 import com.HelloWorld.hello.repository.UserRepository;
 import com.HelloWorld.hello.user.dto.UserRequest;
 import com.HelloWorld.hello.user.dto.UserResponse;
+import com.HelloWorld.hello.user.mapper.UserMapper;
 import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,12 +18,11 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
-    private final UserRepository userRepository;
-
-    public UserService(UserRepository userRepository){
-        this.userRepository = userRepository;
-    }
+    UserRepository userRepository;
+    UserMapper userMapper;
 
     //create
     public UserResponse create(@Valid UserRequest request){
@@ -37,6 +41,7 @@ public class UserService {
     }
 
     //getAll
+    @PreAuthorize("hasRole('ADMIN')") //ROLE_ADMIN mới vào được hàm này
     public List<UserResponse> getUsers(){
         // Nên đặt tên biến rõ ràng để dễ debug nếu cần
         List<User> users = userRepository.findAll();
@@ -45,7 +50,12 @@ public class UserService {
                 .map(UserResponse::from)
                 .toList();
     }
-
+    @PreAuthorize("hasRole('ADMIN') or authentication.name == #username")
+    // Giải thích: Nếu là ADMIN thì OK, nếu không thì username gửi lên phải khớp với username trong Token
+    public UserResponse getUser(String username) {
+        return userMapper.toUserResponse(userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found")));
+    }
     //Delete by id
 //    public boolean deleteUserById(long id){
 //        if (!userRepository.existsById(id)){
