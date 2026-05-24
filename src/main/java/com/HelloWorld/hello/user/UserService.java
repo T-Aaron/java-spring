@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -99,6 +100,16 @@ public class UserService {
         return userRepository.findById(id)
                 .map(UserResponse::from)
                 .orElseThrow(() -> new UserNotFoundException(id));
+    }
+
+    public UserResponse getMyInfo(){
+        // 1. Vào SecurityContext để bốc ra tên người dùng (username) đang đăng nhập từ JWT Token
+        var context = SecurityContextHolder.getContext();
+        String username = context.getAuthentication().getName();
+
+        // 2. Tìm User trong DB bằng username đó, nếu thấy thì map sang DTO, không thấy ném lỗi
+        return userMapper.toUserResponse(userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found")));
     }
 
 }
