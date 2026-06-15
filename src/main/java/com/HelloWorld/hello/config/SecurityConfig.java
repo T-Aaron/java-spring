@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -24,6 +25,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity // <--- Kích hoạt bảo mật tầng Method (@PreAuthorize)
+@EnableScheduling // 🌟 Kích hoạt tính năng chạy ngầm theo chu kỳ
 public class SecurityConfig {
     @Value("${jwt.signerKey}")
     protected String SINGER_KEY;

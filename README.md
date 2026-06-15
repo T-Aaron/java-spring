@@ -23,7 +23,7 @@ graph TD
     G -->|Không đúng Role| H[GlobalExceptionHandler bắt AccessDeniedException - Mã 1006]
     G -->|Đúng Quyền ADMIN/USER| I[Xử lý Logic & Trả về dữ liệu thành công]
 ```
-2. Tính năng: API My Profile (Truy xuất thông tin chính chủ)
+### 2. Tính năng: API My Profile (Truy xuất thông tin chính chủ)
 Hệ thống tự động nhận diện danh tính người dùng ẩn bên trong Token mà không cần truyền ID hay Username lên URL tham số.
 ```mermaid
 graph LR
@@ -35,7 +35,7 @@ graph LR
     E -->|Yes| G[UserMapper chuyển sang UserResponse]
     G --> H[Trả về dữ liệu cá nhân 200 OK]
 ```
-3. Tính năng: Đăng xuất & Vô hiệu hóa Token (Token Blacklisting)
+### 3. Tính năng: Đăng xuất & Vô hiệu hóa Token (Token Blacklisting)
 Khai tử hoàn toàn Token sau khi người dùng bấm Đăng xuất để chống Hacker ăn cắp phiên đăng nhập hoặc spam hệ thống.
 ```mermaid
 graph TD
