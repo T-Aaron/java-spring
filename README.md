@@ -47,5 +47,4 @@ graph TD
     J -->|Đọc JTI của Token| K{Có tồn tại trong bảng danh sách đen?}
     K -->|Yes| L[Ném lỗi JwtException -> Chặn đứng trả về 401]
     K -->|No| M[Cho phép đi tiếp vào hệ thống]
-
----
+```
