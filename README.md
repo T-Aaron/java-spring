@@ -25,7 +25,7 @@ graph TD
 ```
 2. Tính năng: API My Profile (Truy xuất thông tin chính chủ)
 Hệ thống tự động nhận diện danh tính người dùng ẩn bên trong Token mà không cần truyền ID hay Username lên URL tham số.
-```
+```mermaid
 graph LR
     A[Client Request GET /api/users/my-info] --> B(SecurityContextHolder)
     B -->|Bóc tách trích xuất| C[Get Name -> Lấy ra Username]
@@ -37,7 +37,7 @@ graph LR
 ```
 3. Tính năng: Đăng xuất & Vô hiệu hóa Token (Token Blacklisting)
 Khai tử hoàn toàn Token sau khi người dùng bấm Đăng xuất để chống Hacker ăn cắp phiên đăng nhập hoặc spam hệ thống.
-```
+```mermaid
 graph TD
     A[Client Request POST /auth/logout] --> B(AuthenticationService)
     B --> C(verifyToken)
