@@ -6,6 +6,7 @@ import com.HelloWorld.hello.dto.response.ApiResponse;
 import com.HelloWorld.hello.dto.response.AuthenticationResponse;
 import com.HelloWorld.hello.dto.response.IntrospectResponse;
 import com.HelloWorld.hello.service.AuthenticationService;
+import com.HelloWorld.hello.user.dto.LogoutRequest;
 import com.nimbusds.jose.JOSEException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.text.ParseException;
-
 
 @RestController
 @RequestMapping("/auth")
@@ -47,6 +47,14 @@ public class AuthenticationController {
 //        return apiResponse;
         return ApiResponse.<IntrospectResponse>builder()
                 .result(result)
+                .build();
+    }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException{
+        authenticationService.logout(request);
+        return ApiResponse.<Void>builder()
+                .message("Logout successfully")
                 .build();
     }
 }
