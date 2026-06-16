@@ -17,6 +17,7 @@ import com.nimbusds.jwt.SignedJWT;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.experimental.NonFinal;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,17 +32,20 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class AuthenticationService {
+
     UserRepository userRepository;
+    InvalidatedTokenRepository invalidatedTokenRepository;
 
     // TIÊM PasswordEncoder vào đây để dùng chung (Phải được định nghĩa @Bean trong SecurityConfig)
     PasswordEncoder passwordEncoder;
-    InvalidatedTokenRepository invalidatedTokenRepository;
 
     @NonFinal
     @Value("${jwt.signerKey}")
     protected String SINGER_KEY;
 
+    //Logic xác minh token có hợp lệ hoặc hết hạn
     private SignedJWT verifyToken(String token) throws JOSEException, ParseException{
         JWSVerifier verifier = new MACVerifier(SINGER_KEY.getBytes());
         SignedJWT signedJWT = SignedJWT.parse(token);
@@ -86,7 +90,7 @@ public class AuthenticationService {
 
     }
 
-    // 2. Logic Đăng nhập (Authenticate)
+    // Logic Đăng nhập (Authenticate)
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         // ... logic kiểm tra user ...
         var user = userRepository.findByUsername(request.getUsername())
@@ -99,28 +103,46 @@ public class AuthenticationService {
         }
 
         // FIX: Truyền nguyên object user vào, không phải truyền String username
-        var token = generateToken(user);
+        // Tạo đồng thời Access Token (Hạn ngắn) và Refresh Token (Hạn dài)
+//       var token = generateToken(user);
+        var accessToken = generateAccessToken(user);
+        var refreshToken = generateRefreshToken(user);
 
         return AuthenticationResponse.builder()
-                .token(token)
+//                .token(token)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .authenticated(true)
                 .build();
     }
 
-    //Logic tạo token
-    public String generateToken(User user){
+    // ---------------Refresh token--------------------
+    // 1. Hàm tạo ACCESS TOKEN (Hạn ngắn - 10 phút)
+    public String generateAccessToken(User user){
+        return generateToken(user, 600000); // 10 phút = 600,000 ms
+    }
+
+    // 2. Hàm tạo REFRESH TOKEN (Hạn dài - 30 ngày)
+    public String generateRefreshToken(User user){
+        // Refresh Token không cần scope/roles để giảm dung lượng, chỉ cần Username và JTI để quản lý
+        return generateToken(user, 2592000000L); // 30 ngày = 2,592,000,000 ms
+    }
+    //-------------------------------------------------
+    // Logic tạo token
+    // Hàm tạo Token gốc được tối ưu lại (Sử dụng thời gian linh hoạt)
+    public String generateToken(User user, long expiryDuration){
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername()) // Lấy username từ object user
                 .issuer("user.com")
                 .issueTime(new Date())
-                .expirationTime(new Date(
-                        Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
-                ))
-                // Đây là phần quan quan trọng nhất cho bài học tiếp theo:
-                .jwtID(UUID.randomUUID().toString()) // 🌟 THÊM DÒNG NÀY: Cấp ID độc nhất cho Token
-                .claim("scope", user.getRole())
+//              .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
+                .expirationTime(new Date(System.currentTimeMillis() + expiryDuration))
+                // Quan trọng:
+                .jwtID(UUID.randomUUID().toString())  //Cấp ID độc nhất cho Token. Quan trọng để Blacklist sau này
+//              .claim("scope", user.getRole())
+                .claim("scope", buildScope(user))
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
@@ -131,10 +153,12 @@ public class AuthenticationService {
             return jwsObject.serialize();
         } catch (JOSEException e) {
             // Log lỗi nếu ký Token thất bại
-            throw new RuntimeException("Chưa thể tạo Token", e);
+            log.error("Không thể tạo token", e);
+            throw new RuntimeException(e);
         }
     }
 
+    //Logic đăng xuất
     public void logout(LogoutRequest request) throws  ParseException, JOSEException{
         try {
             String token = request.getToken();
@@ -162,4 +186,16 @@ public class AuthenticationService {
         }
 
     }
+
+    // HÀM BUILD SCOPE ĐỘNG: Chuyển role của User thành chuỗi Scope cho JWT
+    private String buildScope(User user){
+        if (user.getRole() != null && !user.getRole().isEmpty()){
+            return user.getRole();  // Trả về "ADMIN" hoặc "USER" trực tiếp từ Entity
+        }
+        return "";
+    }
+
+
+
+
 }

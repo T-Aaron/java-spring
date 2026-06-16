@@ -53,3 +53,17 @@ graph TD
     K -->|Yes| L[Ném lỗi JwtException -> Chặn đứng trả về 401]
     K -->|No| M[Cho phép đi tiếp vào hệ thống]
 ```
+### 4. Tính năng: Refresh Token
+Thay vì lưu chung vào bảng User hay gộp với Access Token, tạo một Entity độc lập tên là RefreshToken để quản lý
+```mermaid
+graph TD
+    A[Frontend POST /auth/refresh] --> B(AuthenticationService)
+    B --> C{1. Kiểm tra chữ ký & Hạn dùng của RefreshToken}
+    C -->|Hết hạn/Sai chữ ký| D[Ném lỗi 401: Refresh Token Expired]
+    C -->|Hợp lệ| E{2. Kiểm tra Token có nằm trong DB và chưa bị hủy?}
+    E -->|Không tồn tại/Bị block| F[Ném lỗi 401: Invalid Session]
+    E -->|Hợp lệ| G[3. Đọc thông tin User liên kết]
+    G --> H[4. Sinh ra cặp Token MỚI TINH: Access Token mới + Refresh Token mới]
+    H --> I[5. Hủy Refresh Token cũ trong DB & Lưu Refresh Token mới vào DB]
+    I --> J[6. Trả cặp Token mới về cho Frontend 200 OK]
+```
