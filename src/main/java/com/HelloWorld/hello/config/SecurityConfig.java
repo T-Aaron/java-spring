@@ -54,7 +54,7 @@ public class SecurityConfig {
         //Lên đời bằng cấu hình JWT.
         http.authorizeHttpRequests(request ->
                 request.requestMatchers(HttpMethod.POST, "/api/users").permitAll() //Bạn hãy tạm thời thêm để có thể tạo được user đầu tiên mà không bị chặn (401/403).
-                        .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/introspect", "/auth/logout").permitAll() // 🌟 THÊM /auth/logout VÀO ĐÂY
+                        .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh").permitAll() // 🌟 THÊM /auth/logout VÀO ĐÂY
                         .anyRequest().authenticated());
 
         // Cấu hình để Server đóng vai trò là Resource Server kiểm tra JWT

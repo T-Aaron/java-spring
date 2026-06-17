@@ -2,10 +2,12 @@ package com.HelloWorld.hello.service;
 
 import com.HelloWorld.hello.dto.request.AuthenticationRequest;
 import com.HelloWorld.hello.dto.request.IntrospectRequest;
+import com.HelloWorld.hello.dto.request.RefreshTokenRequest;
 import com.HelloWorld.hello.dto.response.AuthenticationResponse;
 import com.HelloWorld.hello.dto.response.IntrospectResponse;
 import com.HelloWorld.hello.entity.InvalidatedToken;
 import com.HelloWorld.hello.entity.User;
+import com.HelloWorld.hello.exception.ErrorCode;
 import com.HelloWorld.hello.repository.InvalidatedTokenRepository;
 import com.HelloWorld.hello.repository.UserRepository;
 import com.HelloWorld.hello.user.dto.LogoutRequest;
@@ -24,8 +26,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.UUID;
 
@@ -59,7 +59,7 @@ public class AuthenticationService {
 
         // Nếu chữ ký sai HOẶC token đã hết hạn trước đó rồi -> Coi như không hợp lệ
         if (!verified || !isNotExpried){
-            throw new RuntimeException("Token invalid or expried");
+            throw new RuntimeException("UNAUTHENTICATED");
         }
 
         return signedJWT;
@@ -116,7 +116,45 @@ public class AuthenticationService {
                 .build();
     }
 
-    // ---------------Refresh token--------------------
+    // -----------------------------------
+    //    LOGIC LÀM MỚI TOKEN (Refresh Token với cơ chế Token Rotation)
+
+    public AuthenticationResponse refreshToken (RefreshTokenRequest request) throws JOSEException, ParseException {
+        // 1. Xác thực Refresh Token gửi lên có hợp lệ không
+        SignedJWT signedJWT = verifyToken(request.getRefreshToken());
+
+        // 2. Trích xuất ID (jti) và thời gian hết hạn của Refresh Token cũ
+        String jti = signedJWT.getJWTClaimsSet().getJWTID();
+        Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        // 3. Kiểm tra xem Refresh Token này đã bị đưa vào danh sách đen chưa
+        if (invalidatedTokenRepository.existsById(jti)){
+            throw new RuntimeException("TOKEN_INVALIDATED");
+        }
+
+        // 4. Khai tử ngay lập tức Refresh Token cũ bằng cách đưa vào bảng Blacklist
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jti)
+                .expiryTime(expiryTime)
+                .build();
+        invalidatedTokenRepository.save(invalidatedToken);
+
+        // 5. Trích xuất thông tin User để cấp phiên đăng nhập mới
+        String username = signedJWT.getJWTClaimsSet().getSubject();
+        var user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 6. Tạo cặp Token mới tinh (AccessToken mới + RefreshToken mới)
+        var accessToken = generateAccessToken(user);
+        var refreshToken = generateRefreshToken(user);
+
+        return AuthenticationResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .authenticated(true)
+                .build();
+    }
+
     // 1. Hàm tạo ACCESS TOKEN (Hạn ngắn - 10 phút)
     public String generateAccessToken(User user){
         return generateToken(user, 600000); // 10 phút = 600,000 ms

@@ -2,6 +2,7 @@ package com.HelloWorld.hello.controller;
 
 import com.HelloWorld.hello.dto.request.IntrospectRequest;
 import com.HelloWorld.hello.dto.request.AuthenticationRequest;
+import com.HelloWorld.hello.dto.request.RefreshTokenRequest;
 import com.HelloWorld.hello.dto.response.ApiResponse;
 import com.HelloWorld.hello.dto.response.AuthenticationResponse;
 import com.HelloWorld.hello.dto.response.IntrospectResponse;
@@ -55,6 +56,16 @@ public class AuthenticationController {
         authenticationService.logout(request);
         return ApiResponse.<Void>builder()
                 .message("Logout successfully")
+                .build();
+    }
+
+    // GIA HẠN ĐĂNG NHẬP (Tự động cấp Access Token mới)
+    @PostMapping("/refresh")
+    public ApiResponse<AuthenticationResponse> refresh(@RequestBody RefreshTokenRequest request)
+            throws JOSEException, ParseException{
+        var result = authenticationService.refreshToken(request);
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(result)
                 .build();
     }
 }

@@ -1,6 +1,7 @@
 package com.HelloWorld.hello.exception;
 
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 public enum ErrorCode {
@@ -11,6 +12,7 @@ public enum ErrorCode {
     // 🔐 Bộ đôi lỗi Bảo mật chuẩn chỉnh:
     UNAUTHENTICATED(1005, "Unauthenticated (Token invalid or expired)"),
     UNAUTHORIZED(1006, "You do not have permission"),
+    TOKEN_INVALIDATED(1008, "Token has been invalidated"), // 🌟 Bổ sung mã lỗi riêng biệt
 
     // 📝 Bộ lỗi Validation dữ liệu đầu vào:
     USERNAME_INVALID(1002, "User name invalid, at least {min} characters"),

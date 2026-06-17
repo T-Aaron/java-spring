@@ -8,6 +8,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RefreshRequest {
+public class RefreshTokenRequest {
     String refreshToken; // Chuỗi Token hạn dài do Client truyền lên để xin cấp mới
 }

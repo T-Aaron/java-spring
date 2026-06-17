@@ -85,10 +85,24 @@ public class GlobalExceptionHandler {
 
     // 3. Bắt tất cả các lỗi Runtime còn lại
     @ExceptionHandler(value = RuntimeException.class)
-    ResponseEntity<ApiResponse<Objects>> handlingRuntimeExeption(RuntimeException exception){
+    ResponseEntity<ApiResponse<Objects>> handlingRuntimeException(RuntimeException exception){
+
+        String messageKey = exception.getMessage();
+        ErrorCode errorCode = ErrorCode.UNCATEGORIZED_EXCEPTION;  // Mặc định lỗi 9999
+
+        try {
+            // Thử chuyển đổi message (ví dụ: "TOKEN_INVALIDATED", "UNAUTHENTICATED") thành Enum tương ứng
+            if (messageKey != null) {
+                errorCode = ErrorCode.valueOf(messageKey);
+            }
+        }catch (IllegalArgumentException e){
+            // Nếu không khớp với bất kỳ tên Enum nào, hệ thống giữ nguyên mã 9999
+        }
+
+
         ApiResponse<Objects> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());// Mã lỗi hệ thống chung
-        apiResponse.setMessage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
+        apiResponse.setCode(errorCode.getCode());// Mã lỗi hệ thống chung
+        apiResponse.setMessage(errorCode.getMessage());
 
         return ResponseEntity.badRequest().body(apiResponse);
     }
