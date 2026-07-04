@@ -2,10 +2,11 @@ package com.aaron.usermanagement.user;
 
 import com.aaron.usermanagement.exception.UserNotFoundException;
 import com.aaron.usermanagement.entity.User;
+import com.aaron.usermanagement.repository.RoleRepository;
 import com.aaron.usermanagement.repository.UserRepository;
 import com.aaron.usermanagement.user.dto.UserRequest;
 import com.aaron.usermanagement.user.dto.UserResponse;
-import com.aaron.usermanagement.user.mapper.UserMapper;
+
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -16,14 +17,19 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
     UserRepository userRepository;
-    UserMapper userMapper;
+    RoleRepository roleRepository;
+//    UserMapper userMapper;
+
+    PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     //create
     public UserResponse create(@Valid UserRequest request){
@@ -31,11 +37,15 @@ public class UserService {
         user.setUsername(request.getUsername());
         user.setName(request.getName());
         user.setAge(request.getAge());
-        user.setRole(request.getRole());
 
         // 🛡️ Mã hóa mật khẩu trước khi lưu vào DB
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        //Chuyển đổi Set<String> tên Role thành Set<Role> thực thể trong DB
+        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+            var roles = roleRepository.findAllById(request.getRoles());
+            user.setRoles(new HashSet<>(roles));
+        }
 
         User saved = userRepository.save(user);
         return UserResponse.from(saved); // Trả về DTO thay vì Entity
@@ -51,11 +61,15 @@ public class UserService {
                 .map(UserResponse::from)
                 .toList();
     }
+
+    // 3. Lấy thông tin chi tiết qua Username (Get By Username)
     @PreAuthorize("hasRole('ADMIN') or authentication.name == #username")
     // Giải thích: Nếu là ADMIN thì OK, nếu không thì username gửi lên phải khớp với username trong Token
     public UserResponse getUser(String username) {
-        return userMapper.toUserResponse(userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found")));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return UserResponse.from(user);
+
     }
     //Delete by id
 //    public boolean deleteUserById(long id){
@@ -83,13 +97,17 @@ public class UserService {
         return users.stream().map(UserResponse::from).toList();
     }
 
+    // 6. Cập nhật thông tin người dùng (Update)
     public UserResponse update(Long id, UserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
         user.setName(request.getName());
         user.setAge(request.getAge());
-        user.setRole(request.getRole());
+        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+            var roles = roleRepository.findAllById(request.getRoles());
+            user.setRoles(new HashSet<>(roles));
+        }
 
         User saved = userRepository.save(user);
 
@@ -108,8 +126,9 @@ public class UserService {
         String username = context.getAuthentication().getName();
 
         // 2. Tìm User trong DB bằng username đó, nếu thấy thì map sang DTO, không thấy ném lỗi
-        return userMapper.toUserResponse(userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found")));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return UserResponse.from(user);
     }
 
 }

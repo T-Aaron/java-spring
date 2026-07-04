@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -28,7 +29,8 @@ public class User {
     String password;
     String name;
     Integer age;
-    String role;
+    @ManyToMany
+    Set<Role> roles;
 
     @ToString.Exclude // <--- Cực kỳ quan trọng: Ngăn vòng lặp khi in log
     @EqualsAndHashCode.Exclude // <--- Ngăn vòng lặp khi so sánh object

@@ -4,9 +4,12 @@ import com.aaron.usermanagement.address.dto.AddressResponse;
 import com.aaron.usermanagement.entity.User;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -19,38 +22,48 @@ public class UserResponse {
     String name;
     Integer age;
     String role;
-
+    Set<RoleResponse> roles; // 🌟 Nâng cấp thành tập hợp RoleResponse
     // ✅ Khởi tạo sẵn ArrayList rỗng để tránh trả về null cho Frontend
-    @Builder.Default // Giúp Builder khởi tạo sẵn list rỗng thay vì null
-    private List<AddressResponse> addresses = new ArrayList<>();
 
-    // Constructor nên dùng Wrapper Long để đồng bộ, thêm address
-    public UserResponse(long id, String name, Integer age, String role, List<AddressResponse> addresses) {
-        this.id = id;
-        this.name = name;
-        this.age = age;
-        this.role = role;
-        this.addresses = addresses != null ? addresses : new ArrayList<>();
-    }
+    List<AddressResponse> addresses = new ArrayList<>();
 
 //      Tạo một UserResponse từ một đối tượng User có sẵn mà không cần phải khởi tạo new UserResponse() trước đó ở khắp mọi nơi trong Service.
 //      UserResponse.from(user). Nó giống như một chiếc máy đúc, bạn đưa "nguyên liệu" (Entity) vào một đầu, đầu kia nó nhả ra "sản phẩm" (DTO).
     public static UserResponse from(User user) {
-        // 1. Khởi tạo đối tượng DTO rỗng
-//        UserResponse res = new UserResponse();
         if (user == null) return null;
 
+        Set<RoleResponse> roleResponses = null;
+        // 1. Ánh xạ danh sách Roles & Permissions liên kết
+        if (!CollectionUtils.isEmpty(user.getRoles())){
+            roleResponses = user.getRoles().stream()
+                    .map(role -> RoleResponse.builder()
+                            .name(role.getName())
+                            .description(role.getDescription())
+                            .permissions(CollectionUtils.isEmpty(role.getPermissions()) ? null :
+                                    role.getPermissions().stream()
+                                            .map(p -> PermissionResponse.builder()
+                                                    .name(p.getName())
+                                                    .description(p.getDescription())
+                                                    .build())
+                                            .collect(Collectors.toSet()))
+                            .build())
+                    .collect(Collectors.toSet());
+        }
+
+
+        // 2. Build đối tượng UserResponse hoàn chỉnh
         return UserResponse.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .name(user.getName())
                 .age(user.getAge())
-                .role(user.getRole())
+//                .role(user.getRole())
+                .roles(roleResponses)
                 .addresses(user.getAddresses() != null ?
                         user.getAddresses().stream()
                                 .map(AddressResponse::from)
                                 .toList()
-                                : new ArrayList<>())
+                                : new ArrayList<>()) // ✅ khởi tạo ArrayList rỗng nếu addresses bị null!
                 .build();
 
         // 2. Chuyển đổi các trường đơn giản (Primitive/Wrapper)

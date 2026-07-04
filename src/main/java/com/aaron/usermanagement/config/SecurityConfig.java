@@ -103,8 +103,9 @@ public class SecurityConfig {
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        // Chuyển "ADMIN" trong Token thành "ROLE_ADMIN" trong hệ thống Spring
-        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+
+        // ĐỂ TRỐNG PREFIX: Vì chúng ta đã chủ động phân rã "ROLE_" trong buildScope
+        grantedAuthoritiesConverter.setAuthorityPrefix("");
 
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);

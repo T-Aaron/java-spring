@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Set;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -27,6 +29,7 @@ public class UserRequest {
     @Min(value = 18, message = "AGE_INVALID")
     Integer age;
 
-    String role;
-
+    // 🌟 Nâng cấp từ String role thành một Set chứa tên các vai trò (Ví dụ: ["USER", "ADMIN"])
+    //String role;
+    Set<String> roles;
 }

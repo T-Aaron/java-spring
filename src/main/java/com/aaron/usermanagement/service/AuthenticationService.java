@@ -23,9 +23,11 @@ import org.springframework.beans.factory.annotation.Value;
 import lombok.experimental.NonFinal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.StringJoiner;
 import java.util.UUID;
 
 @Service
@@ -225,11 +227,30 @@ public class AuthenticationService {
     }
 
     // HÀM BUILD SCOPE ĐỘNG: Chuyển role của User thành chuỗi Scope cho JWT
+
     private String buildScope(User user){
-        if (user.getRole() != null && !user.getRole().isEmpty()){
-            return user.getRole();  // Trả về "ADMIN" hoặc "USER" trực tiếp từ Entity
+//        if (user.getRole() != null && !user.getRole().isEmpty()){
+//            return user.getRole();  // Trả về "ADMIN" hoặc "USER" trực tiếp từ Entity
+//        }
+//        return "";
+
+    //HÀM BUILD SCOPE ĐỘNG NÂNG CẤP: Gộp tất cả Roles và Permissions của User
+        StringJoiner stringJoiner = new StringJoiner(" ");
+
+        if (!CollectionUtils.isEmpty(user.getRoles())){
+            user.getRoles().forEach(role -> {
+                // 1. Thêm vai trò với tiền tố "ROLE_" (Ví dụ: ROLE_ADMIN)
+                stringJoiner.add("ROLE_" + role.getName());
+
+                // 2. Thêm toàn bộ các quyền hạn cụ thể (Ví dụ: CREATE_DATA, DELETE_USER)
+                if (!CollectionUtils.isEmpty(user.getRoles())){
+                    role.getPermissions().forEach(permission -> {
+                        stringJoiner.add(permission.getName());
+                    });
+                }
+            });
         }
-        return "";
+        return stringJoiner.toString();
     }
 
 
