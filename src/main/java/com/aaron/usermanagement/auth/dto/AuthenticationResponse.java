@@ -1,5 +1,4 @@
-package com.aaron.usermanagement.user.dto;
-
+package com.aaron.usermanagement.auth.dto;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -8,7 +7,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PermissionResponse {
-    String name;
-    String description;
+public class AuthenticationResponse {
+    String accessToken;
+    String refreshToken;
+    boolean authenticated;
 }

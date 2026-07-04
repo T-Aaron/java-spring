@@ -1,6 +1,5 @@
-package com.aaron.usermanagement.repository;
+package com.aaron.usermanagement.address;
 
-import com.aaron.usermanagement.entity.Address;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AddressRepository extends JpaRepository<Address, Long> {}

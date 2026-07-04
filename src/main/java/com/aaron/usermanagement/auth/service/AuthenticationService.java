@@ -1,15 +1,15 @@
-package com.aaron.usermanagement.service;
+package com.aaron.usermanagement.auth.service;
 
-import com.aaron.usermanagement.dto.request.AuthenticationRequest;
-import com.aaron.usermanagement.dto.request.IntrospectRequest;
-import com.aaron.usermanagement.dto.request.RefreshTokenRequest;
-import com.aaron.usermanagement.dto.response.AuthenticationResponse;
-import com.aaron.usermanagement.dto.response.IntrospectResponse;
-import com.aaron.usermanagement.entity.InvalidatedToken;
-import com.aaron.usermanagement.entity.User;
-import com.aaron.usermanagement.repository.InvalidatedTokenRepository;
-import com.aaron.usermanagement.repository.UserRepository;
-import com.aaron.usermanagement.user.dto.LogoutRequest;
+import com.aaron.usermanagement.auth.InvalidatedToken;
+import com.aaron.usermanagement.auth.InvalidatedTokenRepository;
+import com.aaron.usermanagement.auth.dto.AuthenticationRequest;
+import com.aaron.usermanagement.auth.dto.IntrospectRequest;
+import com.aaron.usermanagement.auth.dto.RefreshTokenRequest;
+import com.aaron.usermanagement.auth.dto.AuthenticationResponse;
+import com.aaron.usermanagement.auth.dto.IntrospectResponse;
+import com.aaron.usermanagement.user.User;
+import com.aaron.usermanagement.user.UserRepository;
+import com.aaron.usermanagement.auth.dto.LogoutRequest;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;

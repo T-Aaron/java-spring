@@ -1,6 +1,6 @@
 package com.aaron.usermanagement.user;
 
-import com.aaron.usermanagement.dto.response.ApiResponse;
+import com.aaron.usermanagement.dto.ApiResponse;
 import com.aaron.usermanagement.user.dto.UserRequest;
 import com.aaron.usermanagement.user.dto.UserResponse;
 import jakarta.validation.Valid;

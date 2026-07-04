@@ -1,8 +1,6 @@
-package com.aaron.usermanagement.exception.error;
+package com.aaron.usermanagement.exception;
 
-import com.aaron.usermanagement.dto.response.ApiResponse;
-import com.aaron.usermanagement.exception.ErrorCode;
-import com.aaron.usermanagement.exception.UserNotFoundException;
+import com.aaron.usermanagement.dto.ApiResponse;
 import jakarta.validation.ConstraintViolation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.aaron.usermanagement.user.dto;
+package com.aaron.usermanagement.auth.dto;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

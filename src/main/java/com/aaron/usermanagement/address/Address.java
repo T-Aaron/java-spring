@@ -1,5 +1,6 @@
-package com.aaron.usermanagement.entity;
+package com.aaron.usermanagement.address;
 
+import com.aaron.usermanagement.user.User;
 import jakarta.persistence.*;
 
 @Entity

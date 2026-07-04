@@ -1,5 +1,7 @@
-package com.aaron.usermanagement.entity;
+package com.aaron.usermanagement.user;
 
+import com.aaron.usermanagement.address.Address;
+import com.aaron.usermanagement.rbac.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

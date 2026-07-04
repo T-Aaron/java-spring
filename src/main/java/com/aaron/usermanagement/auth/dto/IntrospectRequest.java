@@ -1,4 +1,4 @@
-package com.aaron.usermanagement.dto.request;
+package com.aaron.usermanagement.auth.dto;
 
 public class IntrospectRequest {
     private String token;

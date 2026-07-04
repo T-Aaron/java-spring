@@ -1,6 +1,5 @@
-package com.aaron.usermanagement.repository;
+package com.aaron.usermanagement.rbac;
 
-import com.aaron.usermanagement.entity.Permission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -2,11 +2,9 @@ package com.aaron.usermanagement.address;
 
 import com.aaron.usermanagement.address.dto.AddressRequest;
 import com.aaron.usermanagement.address.dto.AddressResponse;
-import com.aaron.usermanagement.entity.Address;
 import com.aaron.usermanagement.exception.UserNotFoundException;
-import com.aaron.usermanagement.repository.AddressRepository;
-import com.aaron.usermanagement.repository.UserRepository;
-import com.aaron.usermanagement.entity.User;
+import com.aaron.usermanagement.user.UserRepository;
+import com.aaron.usermanagement.user.User;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

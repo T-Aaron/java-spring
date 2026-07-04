@@ -1,5 +1,5 @@
 package com.aaron.usermanagement.address.dto;
-import com.aaron.usermanagement.entity.Address;
+import com.aaron.usermanagement.address.Address;
 
 public class AddressResponse {
     private Long id;

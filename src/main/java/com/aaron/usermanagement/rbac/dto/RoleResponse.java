@@ -1,19 +1,17 @@
-package com.aaron.usermanagement.entity;
+package com.aaron.usermanagement.rbac.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Entity
-@Getter
-@Setter
-@Builder
+import java.util.Set;
+
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Permission {
-    @Id
+public class RoleResponse {
     String name;
     String description;
+    Set<PermissionResponse> permissions;
 }

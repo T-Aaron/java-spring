@@ -1,13 +1,13 @@
-package com.aaron.usermanagement.controller;
+package com.aaron.usermanagement.auth;
 
-import com.aaron.usermanagement.dto.request.IntrospectRequest;
-import com.aaron.usermanagement.dto.request.AuthenticationRequest;
-import com.aaron.usermanagement.dto.request.RefreshTokenRequest;
-import com.aaron.usermanagement.dto.response.ApiResponse;
-import com.aaron.usermanagement.dto.response.AuthenticationResponse;
-import com.aaron.usermanagement.dto.response.IntrospectResponse;
-import com.aaron.usermanagement.service.AuthenticationService;
-import com.aaron.usermanagement.user.dto.LogoutRequest;
+import com.aaron.usermanagement.auth.dto.IntrospectRequest;
+import com.aaron.usermanagement.auth.dto.AuthenticationRequest;
+import com.aaron.usermanagement.auth.dto.RefreshTokenRequest;
+import com.aaron.usermanagement.auth.service.AuthenticationService;
+import com.aaron.usermanagement.dto.ApiResponse;
+import com.aaron.usermanagement.auth.dto.AuthenticationResponse;
+import com.aaron.usermanagement.auth.dto.IntrospectResponse;
+import com.aaron.usermanagement.auth.dto.LogoutRequest;
 import com.nimbusds.jose.JOSEException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;

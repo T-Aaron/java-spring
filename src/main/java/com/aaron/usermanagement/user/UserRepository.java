@@ -1,6 +1,5 @@
-package com.aaron.usermanagement.repository;
+package com.aaron.usermanagement.user;
 
-import com.aaron.usermanagement.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

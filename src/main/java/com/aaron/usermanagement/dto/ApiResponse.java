@@ -1,4 +1,4 @@
-package com.aaron.usermanagement.dto.response;
+package com.aaron.usermanagement.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;

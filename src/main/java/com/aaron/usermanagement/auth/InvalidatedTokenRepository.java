@@ -1,6 +1,5 @@
-package com.aaron.usermanagement.repository;
+package com.aaron.usermanagement.auth;
 
-import com.aaron.usermanagement.entity.InvalidatedToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 

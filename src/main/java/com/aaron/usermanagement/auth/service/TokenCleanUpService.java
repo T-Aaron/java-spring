@@ -1,6 +1,6 @@
-package com.aaron.usermanagement.service;
+package com.aaron.usermanagement.auth.service;
 
-import com.aaron.usermanagement.repository.InvalidatedTokenRepository;
+import com.aaron.usermanagement.auth.InvalidatedTokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

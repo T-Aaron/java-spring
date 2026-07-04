@@ -1,9 +1,7 @@
 package com.aaron.usermanagement.user;
 
 import com.aaron.usermanagement.exception.UserNotFoundException;
-import com.aaron.usermanagement.entity.User;
-import com.aaron.usermanagement.repository.RoleRepository;
-import com.aaron.usermanagement.repository.UserRepository;
+import com.aaron.usermanagement.rbac.RoleRepository;
 import com.aaron.usermanagement.user.dto.UserRequest;
 import com.aaron.usermanagement.user.dto.UserResponse;
 
@@ -19,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor

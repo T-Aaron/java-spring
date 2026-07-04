@@ -1,5 +1,5 @@
 package com.aaron.usermanagement.config;
-import com.aaron.usermanagement.repository.InvalidatedTokenRepository;
+import com.aaron.usermanagement.auth.InvalidatedTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

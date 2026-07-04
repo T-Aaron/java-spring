@@ -1,4 +1,4 @@
-package com.aaron.usermanagement.entity;
+package com.aaron.usermanagement.auth;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

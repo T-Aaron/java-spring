@@ -1,7 +1,9 @@
 package com.aaron.usermanagement.user.dto;
 
 import com.aaron.usermanagement.address.dto.AddressResponse;
-import com.aaron.usermanagement.entity.User;
+import com.aaron.usermanagement.rbac.dto.PermissionResponse;
+import com.aaron.usermanagement.rbac.dto.RoleResponse;
+import com.aaron.usermanagement.user.User;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.util.CollectionUtils;
