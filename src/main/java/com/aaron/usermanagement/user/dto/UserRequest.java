@@ -23,7 +23,7 @@ public class UserRequest {
     @NotBlank(message = "REQUIRED")
     String password;
 
-    @NotBlank(message = "REQUIRED")
+//    @NotBlank(message = "REQUIRED")
     String name;
 
     @Min(value = 18, message = "AGE_INVALID")

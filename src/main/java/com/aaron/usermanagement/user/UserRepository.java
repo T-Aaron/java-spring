@@ -9,6 +9,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByNameContainingIgnoreCase(String keyword);
 
+    // Tự động sinh SQL: SELECT COUNT(*) > 0 FROM users WHERE username = ?
+    boolean existsByUsername(String username);
+
     // ✅ Thêm dòng này để phục vụ logic Login
     Optional<User> findByUsername(String username);
 }

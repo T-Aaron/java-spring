@@ -1,4 +1,4 @@
-package com.aaron.usermanagement.config;
+package com.aaron.usermanagement.security;
 import com.aaron.usermanagement.auth.InvalidatedTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,19 +41,10 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
-//        http
-//                .csrf(csfr -> csfr.disable()) // Tạm thời tắt CSRF để có thể POST/DELETE trên Postman
-//                .authorizeHttpRequests(auth ->auth
-//                        .requestMatchers("/auth/**").permitAll()
-//                        .requestMatchers(HttpMethod.GET,"/api/users/**").permitAll() // ✅ Cho phép xem User tự do
-//                        .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN") // Chỉ ADMIN mới được xóa
-//                        .anyRequest().authenticated() // Các lệnh khác (POST, PUT) chỉ cần Login là được
-//                )
-//                .httpBasic(Customizer.withDefaults());
 
-        //Lên đời bằng cấu hình JWT.
+        //Cấu hình JWT.
         http.authorizeHttpRequests(request ->
-                request.requestMatchers(HttpMethod.POST, "/api/users").permitAll() //Bạn hãy tạm thời thêm để có thể tạo được user đầu tiên mà không bị chặn (401/403).
+                request.requestMatchers(HttpMethod.POST, "/api/users/register").permitAll() //Bạn hãy tạm thời thêm để có thể tạo được user đầu tiên mà không bị chặn (401/403).
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh").permitAll() // 🌟 THÊM /auth/logout VÀO ĐÂY
                         .anyRequest().authenticated());
 
@@ -111,22 +102,4 @@ public class SecurityConfig {
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
         return jwtAuthenticationConverter;
     }
-
-//    public InMemoryUserDetailsManager userDetailsSerivce(){
-//        // tạo User quyền ADMIN
-//        UserDetails admin = User.withDefaultPasswordEncoder()
-//                .username("admin")
-//                .password("123456")
-//                .roles("ADMIN")
-//                .build();
-//
-//        // Tạo User thường
-//        UserDetails user = User.withDefaultPasswordEncoder()
-//                .username("user")
-//                .password("123456")
-//                .roles("USER")
-//                .build();
-//
-//        return new InMemoryUserDetailsManager(admin,user);
-//    }
 }

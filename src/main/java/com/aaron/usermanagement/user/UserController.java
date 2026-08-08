@@ -5,7 +5,7 @@ import com.aaron.usermanagement.user.dto.UserRequest;
 import com.aaron.usermanagement.user.dto.UserResponse;
 import jakarta.validation.Valid;
 
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,47 +14,47 @@ import java.util.List;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserService userService;
-
-    public UserController(UserService userService){
-        this.userService = userService;
-    }
+    @Autowired
+    private UserService userService;
 
     //GET all
-
 //    public ResponseEntity<List<UserResponse>> getAll(){
 //        return ResponseEntity.ok(userService.getAll());
 //    }
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<List<UserResponse>> getUsers(){
-        return ApiResponse.<List<UserResponse>>builder() // cài Plugin Lombok: Đảm bảo bạn đã cài plugin Lombok trong IntelliJ.
-                .result(userService.getUsers())
+
+    // 1. Endpoint đăng ký tự do công khai (Chống leo thang đặc quyền!)
+    @PostMapping("/register")
+    public ApiResponse<UserResponse> register(@RequestBody @Valid UserRequest request) {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.register(request))
                 .build();
     }
 
-    //Get user by id
-    @GetMapping("/{id}")
-    //@PathVariable: Nếu không có nó, Spring sẽ không biết lấy giá trị từ URL để đổ vào biến
-//    public ResponseEntity<UserResponse> getById (@PathVariable Long id){
-//        return ResponseEntity.ok(userService.getById(id));
-//    }
-    public ApiResponse<UserResponse> getById (@PathVariable Long id){
-        return ApiResponse.<UserResponse>builder()
-                .result(userService.getById(id)).build();
-    }
-
-    //Create
+    // 2. Endpoint tạo user có phân quyền (Chỉ dành cho ADMIN)
     @PostMapping
-//    public ResponseEntity<UserResponse> create(@Valid @RequestBody UserRequest request){
-//        return ResponseEntity.ok(userService.create(request));
-//    }
     public ApiResponse<UserResponse> create(@Valid @RequestBody UserRequest request){
         return ApiResponse.<UserResponse>builder()
                 .result(userService.create(request))
                 .build();
     }
 
+    // 3. Endpoint lấy danh sách users (Chỉ dành cho ADMIN)
+    @GetMapping
+    public ApiResponse<List<UserResponse>> getUsers(){
+        return ApiResponse.<List<UserResponse>>builder() // cài Plugin Lombok: Đảm bảo bạn đã cài plugin Lombok trong IntelliJ.
+                .result(userService.getUsers())
+                .build();
+    }
+
+    // 4. Lấy chi tiết user (Đã có @PreAuthorize chống IDOR ở tầng Service)
+    @GetMapping("/{id}")
+    public ApiResponse<UserResponse> getUser(@PathVariable Long id) {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getById(id))
+                .build();
+    }
+
+    // 5. Cập nhật thông tin user (Đã có @PreAuthorize chống IDOR ở tầng Service)
     @PutMapping("/{id}")
     public ApiResponse<UserResponse> update(@PathVariable Long id, @Valid @RequestBody UserRequest request){
         UserResponse updated = userService.update(id, request);
@@ -63,18 +63,20 @@ public class UserController {
                 .build();
     }
 
-    //Delete
+    // 6. Xóa user (Chỉ dành cho ADMIN)
     @DeleteMapping("/{id}")
-    public ApiResponse<String> delete (@PathVariable Long id){
-//        boolean deleted = userService.deleteUserById(id);
-//        if (!deleted){
-//            return ResponseEntity.status(404).body("User not found");
-//        }
-//      3️⃣ Controller KHÔNG xử lý lỗi nữa
-//      👉 Controller sạch.
+    public ApiResponse<Void> delete (@PathVariable Long id){
         userService.deleteUserById(id);
-        return ApiResponse.<String>builder()
-                .result("User has been deleted")
+        return ApiResponse.<Void>builder()
+                .message("User has been deleted successfully")
+                .build();
+    }
+
+    // 7. Endpoint lấy thông tin cá nhân của người dùng hiện tại
+    @GetMapping("/my-info")
+    public ApiResponse<UserResponse> getMyInfo() {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getMyInfo())
                 .build();
     }
 
@@ -85,13 +87,6 @@ public class UserController {
 //        return ResponseEntity.ok(user);
         return ApiResponse.<List<UserResponse>>builder()
                 .result(user)
-                .build();
-    }
-
-    @GetMapping("/my-info")
-    public ApiResponse<UserResponse> getMyInfo(){
-        return ApiResponse.<UserResponse>builder()
-                .result(userService.getMyInfo())
                 .build();
     }
 }

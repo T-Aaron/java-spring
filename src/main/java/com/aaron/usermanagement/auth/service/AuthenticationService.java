@@ -2,11 +2,9 @@ package com.aaron.usermanagement.auth.service;
 
 import com.aaron.usermanagement.auth.InvalidatedToken;
 import com.aaron.usermanagement.auth.InvalidatedTokenRepository;
-import com.aaron.usermanagement.auth.dto.AuthenticationRequest;
-import com.aaron.usermanagement.auth.dto.IntrospectRequest;
-import com.aaron.usermanagement.auth.dto.RefreshTokenRequest;
-import com.aaron.usermanagement.auth.dto.AuthenticationResponse;
-import com.aaron.usermanagement.auth.dto.IntrospectResponse;
+import com.aaron.usermanagement.auth.dto.*;
+import com.aaron.usermanagement.exception.AppException;
+import com.aaron.usermanagement.exception.ErrorCode;
 import com.aaron.usermanagement.user.User;
 import com.aaron.usermanagement.user.UserRepository;
 import com.aaron.usermanagement.auth.dto.LogoutRequest;
@@ -39,8 +37,7 @@ public class AuthenticationService {
     UserRepository userRepository;
     InvalidatedTokenRepository invalidatedTokenRepository;
 
-    // TIÊM PasswordEncoder vào đây để dùng chung (Phải được định nghĩa @Bean trong SecurityConfig)
-    PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder; // Inject đúng Bean từ Container, loại bỏ khởi tạo thủ công
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -56,69 +53,58 @@ public class AuthenticationService {
 
         // 2. Kiểm tra thời gian hết hạn
         Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-        boolean isNotExpried = expiryTime != null && expiryTime.after(new Date());
+        boolean isNotExpired = expiryTime != null && expiryTime.after(new Date());
 
-        // Nếu chữ ký sai HOẶC token đã hết hạn trước đó rồi -> Coi như không hợp lệ
-        if (!verified || !isNotExpried){
-            throw new RuntimeException("UNAUTHENTICATED");
+        // 🛡️ SỬA LỖI: Sử dụng AppException bọc Enum trực tiếp, không sử dụng String thô
+        if (!verified || !isNotExpired) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        // 🛡️ BỔ SUNG: Kiểm tra xem JWT ID (jti) có nằm trong danh sách đã bị vô hiệu hóa hay không
+        String jti = signedJWT.getJWTClaimsSet().getJWTID();
+        if (invalidatedTokenRepository.existsById(jti)) {
+            throw new AppException(ErrorCode.TOKEN_INVALIDATED); // Hoặc UNAUTHENTICATED
         }
 
         return signedJWT;
     }
 
-    // Logic Kiểm tra Token (Introspect)
+    // Kiểm tra Token
     public IntrospectResponse introspect(IntrospectRequest request) {
         var token = request.getToken();
         try {
-//            // 1. Tạo Verifier (Người kiểm duyệt) dựa trên Key bí mật của bạn
-//            JWSVerifier verifier = new MACVerifier(SINGER_KEY.getBytes());
-//            // 2. Giải mã chuỗi Token khách gửi lên thành đối tượng SignedJWT
-//            SignedJWT signedJWT = SignedJWT.parse(token);
-//            // 3. Kiểm tra xem chữ ký có khớp không
-//            boolean verified = signedJWT.verify(verifier);
-//            // 4. Kiểm tra xem Token đã hết hạn (Expiration Time) chưa
-//            Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-//            boolean isNotExpired = expiryTime.after(new Date());
-
-            verifyToken(request.getToken());
+            verifyToken(token);
             return IntrospectResponse.builder().valid(true).build();
 
-        } catch (JOSEException | ParseException e) {
-            // Nếu lỗi parse hoặc verify, nghĩa là token không hợp lệ
+        } catch (AppException | JOSEException | ParseException e) {
             return IntrospectResponse.builder().valid(false).build();
         }
 
 
     }
 
-    // Logic Đăng nhập (Authenticate)
+    // Đăng nhập (Authenticate)
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         // ... logic kiểm tra user ...
         var user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
-        if (!authenticated){
-            throw new RuntimeException("Unauthenticated");
+        if (!authenticated) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
-        // FIX: Truyền nguyên object user vào, không phải truyền String username
-        // Tạo đồng thời Access Token (Hạn ngắn) và Refresh Token (Hạn dài)
-//       var token = generateToken(user);
         var accessToken = generateAccessToken(user);
         var refreshToken = generateRefreshToken(user);
 
         return AuthenticationResponse.builder()
-//                .token(token)
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .authenticated(true)
                 .build();
     }
 
-    // -----------------------------------
-    //    LOGIC LÀM MỚI TOKEN (Refresh Token với cơ chế Token Rotation)
 
     public AuthenticationResponse refreshToken (RefreshTokenRequest request) throws JOSEException, ParseException {
         // 1. Xác thực Refresh Token gửi lên có hợp lệ không
@@ -128,24 +114,20 @@ public class AuthenticationService {
         String jti = signedJWT.getJWTClaimsSet().getJWTID();
         Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
 
-        // 3. Kiểm tra xem Refresh Token này đã bị đưa vào danh sách đen chưa
-        if (invalidatedTokenRepository.existsById(jti)){
-            throw new RuntimeException("TOKEN_INVALIDATED");
-        }
 
-        // 4. Khai tử ngay lập tức Refresh Token cũ bằng cách đưa vào bảng Blacklist
+        // 3. Khai tử ngay lập tức Refresh Token cũ bằng cách đưa vào bảng Blacklist
         InvalidatedToken invalidatedToken = InvalidatedToken.builder()
                 .id(jti)
                 .expiryTime(expiryTime)
                 .build();
         invalidatedTokenRepository.save(invalidatedToken);
 
-        // 5. Trích xuất thông tin User để cấp phiên đăng nhập mới
+        // 4. Trích xuất thông tin User để cấp phiên đăng nhập mới
         String username = signedJWT.getJWTClaimsSet().getSubject();
         var user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        // 6. Tạo cặp Token mới tinh (AccessToken mới + RefreshToken mới)
+        // 5. Tạo cặp Token mới tinh (AccessToken mới + RefreshToken mới)
         var accessToken = generateAccessToken(user);
         var refreshToken = generateRefreshToken(user);
 
@@ -176,11 +158,10 @@ public class AuthenticationService {
                 .subject(user.getUsername()) // Lấy username từ object user
                 .issuer("user.com")
                 .issueTime(new Date())
-//              .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
+
                 .expirationTime(new Date(System.currentTimeMillis() + expiryDuration))
-                // Quan trọng:
+
                 .jwtID(UUID.randomUUID().toString())  //Cấp ID độc nhất cho Token. Quan trọng để Blacklist sau này
-//              .claim("scope", user.getRole())
                 .claim("scope", buildScope(user))
                 .build();
 
@@ -243,7 +224,7 @@ public class AuthenticationService {
                 stringJoiner.add("ROLE_" + role.getName());
 
                 // 2. Thêm toàn bộ các quyền hạn cụ thể (Ví dụ: CREATE_DATA, DELETE_USER)
-                if (!CollectionUtils.isEmpty(user.getRoles())){
+                if (!CollectionUtils.isEmpty(role.getPermissions())){
                     role.getPermissions().forEach(permission -> {
                         stringJoiner.add(permission.getName());
                     });

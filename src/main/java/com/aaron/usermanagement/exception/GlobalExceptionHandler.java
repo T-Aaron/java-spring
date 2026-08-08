@@ -14,27 +14,23 @@ import java.util.Objects;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    // Helper để tạo Response chung
-//    private ResponseEntity<ErrorResponse> buildErrorResponse(HttpStatus status, List<ApiError> errors) {
-//        return ResponseEntity.status(status).body(new ErrorResponse(status.value(), errors));
-//    }
+    // 1. Bắt các lỗi AppException tự định nghĩa (Sử dụng Enum ErrorCode trực tiếp)
+    @ExceptionHandler(value = AppException.class)
+    ResponseEntity<ApiResponse<Void>> handlingAppException(AppException exception) {
+        ErrorCode errorCode = exception.getErrorCode();
+        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
+                .code(errorCode.getCode())
+                .message(errorCode.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+    }
 
-//    @ExceptionHandler(MethodArgumentNotValidException.class)
-//    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex){
-//        List<ApiError> errors = ex.getBindingResult().getFieldErrors().stream()
-//                .map(e -> new ApiError(e.getField(), e.getDefaultMessage()))
-//                .toList();
-//        return buildErrorResponse(HttpStatus.BAD_REQUEST, errors);
-//    }
-
-    // 1. Bắt lỗi Validation (Dữ liệu đầu vào)
+    // 2. Bắt lỗi Validation (Dữ liệu đầu vào)
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    ResponseEntity<ApiResponse> handlingValidation(MethodArgumentNotValidException exception){
+    ResponseEntity<ApiResponse<Void>> handlingValidation(MethodArgumentNotValidException exception){
         var fieldError = exception.getFieldError();
         String enumKey = fieldError.getDefaultMessage();
-//        ErrorCode errorCode = ErrorCode.valueOf(enumKey);
 
-        // Mẹo: Đề phòng trường hợp message trong Request không khớp với tên Enum
         ErrorCode errorCode = ErrorCode.UNCATEGORIZED_EXCEPTION;
         Map<String, Object> attributes = null;
 
@@ -47,83 +43,47 @@ public class GlobalExceptionHandler {
             // Log lỗi nếu cần
         }
 
-        ApiResponse<Object> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(errorCode.getCode());
-
-        apiResponse.setMessage(
-                Objects.nonNull(attributes)
+        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
+                .code(errorCode.getCode())
+                .message(Objects.nonNull(attributes)
                         ? mapAttribute(errorCode.getMessage(), attributes)
-                        : errorCode.getMessage());
+                        : errorCode.getMessage())
+                .build();
 
         return ResponseEntity.badRequest().body(apiResponse);
     }
+
     // Hàm Helper để thay thế placeholder {min} bằng giá trị thực tế
     private String mapAttribute(String message, Map<String, Object> attributes){
-        // Thử lấy 'value' (cho @Min) hoặc 'min' (cho @Size)
         Object minValue = attributes.get("value");// Lấy giá trị 'min' từ Annotation
-
         if (Objects.isNull(minValue)) {
             minValue = attributes.get("min");
         }
-
         return message.replace("{min}", String.valueOf(minValue));
     }
 
-    // 2. Bắt lỗi không tìm thấy User (Thay thế UserNotFoundException cũ)
+    // 3. Bắt lỗi phân quyền truy cập (403 Forbidden) ở tầng Method Security
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ApiResponse> handleUserNotFound(UserNotFoundException exception){
-        // Sử dụng Helper đã viết ở trên
-        ApiResponse apiResponse = new ApiResponse();
-        apiResponse.setCode(ErrorCode.USER_NOT_FOUND.getCode());
-        apiResponse.setMessage(ErrorCode.USER_NOT_FOUND.getMessage());
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
-    }
-
-
-    // 3. Bắt tất cả các lỗi Runtime còn lại
-    @ExceptionHandler(value = RuntimeException.class)
-    ResponseEntity<ApiResponse<Objects>> handlingRuntimeException(RuntimeException exception){
-
-        String messageKey = exception.getMessage();
-        ErrorCode errorCode = ErrorCode.UNCATEGORIZED_EXCEPTION;  // Mặc định lỗi 9999
-
-        try {
-            // Thử chuyển đổi message (ví dụ: "TOKEN_INVALIDATED", "UNAUTHENTICATED") thành Enum tương ứng
-            if (messageKey != null) {
-                errorCode = ErrorCode.valueOf(messageKey);
-            }
-        }catch (IllegalArgumentException e){
-            // Nếu không khớp với bất kỳ tên Enum nào, hệ thống giữ nguyên mã 9999
-        }
-
-
-        ApiResponse<Objects> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(errorCode.getCode());// Mã lỗi hệ thống chung
-        apiResponse.setMessage(errorCode.getMessage());
-
-        return ResponseEntity.badRequest().body(apiResponse);
-    }
-
-    // 4. Bắt lỗi phân quyền
-//    @ExceptionHandler(value = org.springframework.security.access.AccessDeniedException.class)
-//    ResponseEntity<ApiResponse> handlingAccessDenied(AccessDeniedException exception){
-//        ApiResponse apiResponse = new ApiResponse();
-//        apiResponse.setCode(ErrorCode.UNAUTHORIZED.getCode());
-//        apiResponse.setMessage(ErrorCode.UNAUTHORIZED.getMessage());
-//
-//        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiResponse);
-//    }
-    @ExceptionHandler(value = AccessDeniedException.class)
-    ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException exception){
+    public ResponseEntity<ApiResponse<Void>> handlingAccessDeniedException(AccessDeniedException exception){
         ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
-
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
-                ApiResponse.builder()
+                ApiResponse.<Void>builder()
                         .code(errorCode.getCode())
                         .message(errorCode.getMessage())
                         .build()
         );
     }
+
+
+    // 4. Bắt lỗi hệ thống chưa được định nghĩa trước
+    @ExceptionHandler(value = RuntimeException.class)
+    ResponseEntity<ApiResponse<Void>> handlingGeneralException(RuntimeException exception){
+        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
+                .code(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode())
+                .message(exception.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
+    }
+
 }
 
